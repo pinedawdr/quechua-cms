@@ -1,5 +1,6 @@
+// src/components/ExercisesManager.js
 import React, { useState, useEffect } from 'react';
-import { getFirestore, collection, getDocs, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, addDoc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import ExerciseForm from './ExerciseForm';
 import '../styles/ExercisesManager.css';
 
@@ -36,9 +37,10 @@ const ExercisesManager = () => {
 
   const handleAddExercise = async (exerciseData) => {
     try {
-      await addDoc(collection(db, 'verbalExercises'), exerciseData);
+      const docRef = await addDoc(collection(db, 'verbalExercises'), exerciseData);
       fetchExercises();
       setShowForm(false);
+      return docRef;
     } catch (error) {
       console.error('Error adding exercise:', error);
       alert('Error al añadir el ejercicio. Intenta nuevamente.');
@@ -70,7 +72,7 @@ const ExercisesManager = () => {
     }
   };
 
-  const handleEditExercise = (exercise) => {
+  const handleEditExercise = async (exercise) => {
     setEditingExercise(exercise);
     setShowForm(true);
   };
@@ -78,6 +80,32 @@ const ExercisesManager = () => {
   const handleCancelEdit = () => {
     setEditingExercise(null);
     setShowForm(false);
+  };
+
+  const getExerciseTypeLabel = (type) => {
+    switch(type) {
+      case 'pronunciation':
+        return 'Pronunciación';
+      case 'vocabulary':
+        return 'Vocabulario';
+      case 'conversation':
+        return 'Conversación';
+      default:
+        return 'Otro';
+    }
+  };
+
+  const getDifficultyLabel = (difficulty) => {
+    switch(difficulty) {
+      case 'easy':
+        return 'Básico';
+      case 'medium':
+        return 'Intermedio';
+      case 'hard':
+        return 'Avanzado';
+      default:
+        return 'No especificado';
+    }
   };
 
   if (loading && exercises.length === 0) {
@@ -126,7 +154,11 @@ const ExercisesManager = () => {
                   <div className="exercise-details">
                     <h3>{exercise.title}</h3>
                     <p>{exercise.description}</p>
-                    <p className="exercise-words">{exercise.words?.length || 0} palabras</p>
+                    <div className="exercise-metadata">
+                      <span className="exercise-type">{getExerciseTypeLabel(exercise.type)}</span>
+                      <span className="exercise-difficulty">{getDifficultyLabel(exercise.difficulty)}</span>
+                      <span className="exercise-words">{exercise.words?.length || 0} palabras</span>
+                    </div>
                   </div>
                   <div className="exercise-actions">
                     <button 

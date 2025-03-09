@@ -120,3 +120,39 @@
   .delete-button:hover {
     background-color: #e53935;
   }
+
+ /* Añadir al final de src/styles/ExercisesManager.css */
+.exercise-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.exercise-type,
+.exercise-difficulty,
+.exercise-words {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.exercise-type {
+  background-color: rgba(74, 111, 255, 0.1);
+  color: #4A6FFF;
+}
+
+.exercise-difficulty {
+  background-color: rgba(246, 173, 85, 0.1);
+  color: #F6AD55;
+}
+
+.exercise-words {
+  background-color: rgba(72, 187, 120, 0.1);
+  color: #48BB78;
+}
+
+.playingButton {
+  background-color: #F6AD55;
+}

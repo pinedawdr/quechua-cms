@@ -1,32 +1,44 @@
+// src/components/ExerciseForm.js
 import React, { useState, useEffect } from 'react';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { uploadImage } from '../services/cloudinary';
-import '../styles/BookForm.css';
+import '../styles/ExerciseForm.css';
 
-const BookForm = ({ book, onSubmit, onCancel }) => {
+const db = getFirestore();
+
+const ExerciseForm = ({ exercise, onSubmit, onCancel }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [coverImage, setCoverImage] = useState('');
-  const [pages, setPages] = useState([{ quechuaText: '', spanishText: '', image: '' }]);
+  const [type, setType] = useState('pronunciation');
+  const [difficulty, setDifficulty] = useState('easy');
+  const [imageUrl, setImageUrl] = useState('');
+  const [words, setWords] = useState([
+    { quechuaText: '', spanishText: '', audioUrl: '' }
+  ]);
   const [loading, setLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
-  const [coverFile, setCoverFile] = useState(null);
-  const [pageFiles, setPageFiles] = useState([null]);
+  const [imageFile, setImageFile] = useState(null);
+  const [audioFiles, setAudioFiles] = useState([null]);
+  const [audioPreview, setAudioPreview] = useState([false]);
 
   useEffect(() => {
-    if (book) {
-      setTitle(book.title || '');
-      setDescription(book.description || '');
-      setCoverImage(book.coverImage || '');
-      setPreviewImage(book.coverImage || '');
-      setPages(book.pages || [{ quechuaText: '', spanishText: '', image: '' }]);
-      setPageFiles(book.pages ? book.pages.map(() => null) : [null]);
+    if (exercise) {
+      setTitle(exercise.title || '');
+      setDescription(exercise.description || '');
+      setType(exercise.type || 'pronunciation');
+      setDifficulty(exercise.difficulty || 'easy');
+      setImageUrl(exercise.imageUrl || '');
+      setPreviewImage(exercise.imageUrl || '');
+      setWords(exercise.words || [{ quechuaText: '', spanishText: '', audioUrl: '' }]);
+      setAudioFiles(exercise.words ? exercise.words.map(() => null) : [null]);
+      setAudioPreview(exercise.words ? exercise.words.map(word => !!word.audioUrl) : [false]);
     }
-  }, [book]);
+  }, [exercise]);
 
-  const handleCoverImageChange = (e) => {
+  const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setCoverFile(file);
+      setImageFile(file);
       // Show local preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -36,49 +48,47 @@ const BookForm = ({ book, onSubmit, onCancel }) => {
     }
   };
 
-  const handlePageImageChange = (index, e) => {
+  const handleAudioChange = (index, e) => {
     const file = e.target.files[0];
     if (file) {
-      const updatedPageFiles = [...pageFiles];
-      updatedPageFiles[index] = file;
-      setPageFiles(updatedPageFiles);
+      const updatedAudioFiles = [...audioFiles];
+      updatedAudioFiles[index] = file;
+      setAudioFiles(updatedAudioFiles);
       
-      // Show local preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const updatedPages = [...pages];
-        updatedPages[index] = {
-          ...updatedPages[index],
-          _previewImage: reader.result // This is just for preview, won't be saved
-        };
-        setPages(updatedPages);
-      };
-      reader.readAsDataURL(file);
+      // Actualizar la vista previa
+      const updatedAudioPreview = [...audioPreview];
+      updatedAudioPreview[index] = true;
+      setAudioPreview(updatedAudioPreview);
     }
   };
 
-  const handleAddPage = () => {
-    setPages([...pages, { quechuaText: '', spanishText: '', image: '' }]);
-    setPageFiles([...pageFiles, null]);
+  const handleAddWord = () => {
+    setWords([...words, { quechuaText: '', spanishText: '', audioUrl: '' }]);
+    setAudioFiles([...audioFiles, null]);
+    setAudioPreview([...audioPreview, false]);
   };
 
-  const handleRemovePage = (index) => {
-    const updatedPages = [...pages];
-    updatedPages.splice(index, 1);
-    setPages(updatedPages);
+  const handleRemoveWord = (index) => {
+    const updatedWords = [...words];
+    updatedWords.splice(index, 1);
+    setWords(updatedWords);
     
-    const updatedPageFiles = [...pageFiles];
-    updatedPageFiles.splice(index, 1);
-    setPageFiles(updatedPageFiles);
+    const updatedAudioFiles = [...audioFiles];
+    updatedAudioFiles.splice(index, 1);
+    setAudioFiles(updatedAudioFiles);
+    
+    const updatedAudioPreview = [...audioPreview];
+    updatedAudioPreview.splice(index, 1);
+    setAudioPreview(updatedAudioPreview);
   };
 
-  const handlePageChange = (index, field, value) => {
-    const updatedPages = [...pages];
-    updatedPages[index] = {
-      ...updatedPages[index],
+  const handleWordChange = (index, field, value) => {
+    const updatedWords = [...words];
+    updatedWords[index] = {
+      ...updatedWords[index],
       [field]: value
     };
-    setPages(updatedPages);
+    setWords(updatedWords);
   };
 
   const handleSubmit = async (e) => {
@@ -86,48 +96,86 @@ const BookForm = ({ book, onSubmit, onCancel }) => {
     setLoading(true);
     
     try {
-      // Upload cover image if changed
-      let finalCoverImage = coverImage;
-      if (coverFile) {
-        finalCoverImage = await uploadImage(coverFile);
+      // Upload image if changed
+      let finalImageUrl = imageUrl;
+      if (imageFile) {
+        finalImageUrl = await uploadImage(imageFile);
       }
       
-      // Upload page images if changed
-      const finalPages = await Promise.all(pages.map(async (page, index) => {
-        let finalPageImage = page.image;
-        if (pageFiles[index]) {
-          finalPageImage = await uploadImage(pageFiles[index]);
+      // Upload audio files if changed
+      const finalWords = await Promise.all(words.map(async (word, index) => {
+        let finalAudioUrl = word.audioUrl;
+        if (audioFiles[index]) {
+          // En lugar de usar uploadImage, usamos una función específica para audio
+          finalAudioUrl = await uploadAudio(audioFiles[index]);
         }
         
-        // Remove the preview property
-        const { _previewImage, ...pageData } = page;
-        
         return {
-          ...pageData,
-          image: finalPageImage
+          ...word,
+          audioUrl: finalAudioUrl
         };
       }));
       
-      const bookData = {
+      const exerciseData = {
         title,
         description,
-        coverImage: finalCoverImage,
-        pages: finalPages,
+        type,
+        difficulty,
+        imageUrl: finalImageUrl,
+        words: finalWords,
         updatedAt: new Date().toISOString()
       };
       
-      await onSubmit(bookData);
+      // Si estamos editando un ejercicio existente, actualizamos
+      if (exercise && exercise.id) {
+        await setDoc(doc(db, 'verbalExercises', exercise.id), exerciseData);
+      } else {
+        // Si es nuevo, usamos la función onSubmit proporcionada
+        await onSubmit(exerciseData);
+      }
+      
+      onCancel(); // Cerrar el formulario después de guardar
     } catch (error) {
-      console.error('Error saving book:', error);
-      alert('Error al guardar el libro. Intenta nuevamente.');
+      console.error('Error saving exercise:', error);
+      alert('Error al guardar el ejercicio. Intenta nuevamente.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Función específica para subir archivos de audio
+  const uploadAudio = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'quechua_app_preset');
+      
+      // Especificar que es un archivo de audio para asegurar el formato correcto
+      formData.append('resource_type', 'video'); // Cloudinary usa 'video' para audio también
+      
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/dwsht1d0o/upload`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+      
+      const data = await response.json();
+      if (data.secure_url) {
+        return data.secure_url;
+      } else {
+        throw new Error('Failed to upload audio');
+      }
+    } catch (error) {
+      console.error('Error uploading audio:', error);
+      throw error;
+    }
+  };
+
   return (
-    <div className="book-form">
-      <h2>{book ? 'Editar Libro' : 'Añadir Libro'}</h2>
+    <div className="exercise-form">
+      <h2>{exercise ? 'Editar Ejercicio' : 'Añadir Ejercicio'}</h2>
       
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -137,7 +185,7 @@ const BookForm = ({ book, onSubmit, onCancel }) => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            placeholder="Ingresa el título del libro"
+            placeholder="Ingresa el título del ejercicio"
           />
         </div>
         
@@ -146,73 +194,105 @@ const BookForm = ({ book, onSubmit, onCancel }) => {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Ingresa una descripción breve del libro"
+            placeholder="Ingresa una descripción breve del ejercicio"
           />
         </div>
         
         <div className="form-group">
-          <label>Imagen de Portada</label>
+          <label>Tipo de ejercicio</label>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            required
+          >
+            <option value="pronunciation">Pronunciación</option>
+            <option value="vocabulary">Vocabulario</option>
+            <option value="conversation">Conversación</option>
+          </select>
+        </div>
+        
+        <div className="form-group">
+          <label>Nivel de dificultad</label>
+          <select
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value)}
+            required
+          >
+            <option value="easy">Básico</option>
+            <option value="medium">Intermedio</option>
+            <option value="hard">Avanzado</option>
+          </select>
+        </div>
+        
+        <div className="form-group">
+          <label>Imagen Principal</label>
           {previewImage && (
             <div className="image-preview">
-              <img src={previewImage} alt="Vista previa de portada" />
+              <img src={previewImage} alt="Vista previa de imagen" />
             </div>
           )}
           <input
             type="file"
             accept="image/*"
-            onChange={handleCoverImageChange}
+            onChange={handleImageChange}
           />
         </div>
         
-        <h3>Páginas</h3>
-        {pages.map((page, index) => (
-          <div key={index} className="page-form">
-            <h4>Página {index + 1}</h4>
+        <h3>Palabras</h3>
+        {words.map((word, index) => (
+          <div key={index} className="word-form">
+            <h4>Palabra {index + 1}</h4>
             
             <div className="form-group">
-              <label>Texto en Quechua</label>
-              <textarea
-                value={page.quechuaText}
-                onChange={(e) => handlePageChange(index, 'quechuaText', e.target.value)}
+              <label>Palabra en Quechua</label>
+              <input
+                type="text"
+                value={word.quechuaText}
+                onChange={(e) => handleWordChange(index, 'quechuaText', e.target.value)}
                 required
-                placeholder="Texto en quechua para esta página"
+                placeholder="Palabra en quechua"
               />
             </div>
             
             <div className="form-group">
-              <label>Texto en Español</label>
-              <textarea
-                value={page.spanishText}
-                onChange={(e) => handlePageChange(index, 'spanishText', e.target.value)}
+              <label>Traducción al Español</label>
+              <input
+                type="text"
+                value={word.spanishText}
+                onChange={(e) => handleWordChange(index, 'spanishText', e.target.value)}
                 required
                 placeholder="Traducción al español"
               />
             </div>
             
             <div className="form-group">
-              <label>Imagen de la Página</label>
-              {(page._previewImage || page.image) && (
-                <div className="image-preview">
-                  <img 
-                    src={page._previewImage || page.image} 
-                    alt={`Vista previa de página ${index + 1}`}
-                  />
+              <label>Audio de Pronunciación</label>
+              {(word.audioUrl || audioPreview[index]) && (
+                <div className="audio-preview">
+                  <audio controls>
+                    <source src={word.audioUrl} type="audio/mp3" />
+                    Tu navegador no soporta el elemento de audio.
+                  </audio>
                 </div>
               )}
               <input
                 type="file"
-                accept="image/*"
-                onChange={(e) => handlePageImageChange(index, e)}
+                accept="audio/mp3,audio/mpeg,audio/wav"
+                onChange={(e) => handleAudioChange(index, e)}
               />
+              <p className="audio-note">
+                <strong>Importante:</strong> Sube un archivo de audio MP3 claro y de corta duración (preferiblemente menos de 5 segundos).
+                Un archivo más grande puede causar problemas de reproducción en la app.
+              </p>
             </div>
             
-            {pages.length > 1 && (
+            {words.length > 1 && (
               <button
                 type="button"
-                className="remove-page-button"
-                onClick={() => handleRemovePage(index)}
+                className="remove-word-button"
+                onClick={() => handleRemoveWord(index)}
               >
-                Eliminar Página
+                Eliminar Palabra
               </button>
             )}
           </div>
@@ -220,10 +300,10 @@ const BookForm = ({ book, onSubmit, onCancel }) => {
         
         <button
           type="button"
-          className="add-page-button"
-          onClick={handleAddPage}
+          className="add-word-button"
+          onClick={handleAddWord}
         >
-          Añadir Página
+          Añadir Palabra
         </button>
         
         <div className="form-actions">
@@ -232,7 +312,7 @@ const BookForm = ({ book, onSubmit, onCancel }) => {
             className="submit-button"
             disabled={loading}
           >
-            {loading ? 'Guardando...' : (book ? 'Actualizar Libro' : 'Crear Libro')}
+            {loading ? 'Guardando...' : (exercise ? 'Actualizar Ejercicio' : 'Crear Ejercicio')}
           </button>
           <button
             type="button"
@@ -248,4 +328,4 @@ const BookForm = ({ book, onSubmit, onCancel }) => {
   );
 };
 
-export default BookForm;
+export default ExerciseForm;

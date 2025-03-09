@@ -1,5 +1,6 @@
+// src/components/BooksManager.js
 import React, { useState, useEffect } from 'react';
-import { getFirestore, collection, getDocs, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, addDoc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import BookForm from './BookForm';
 import '../styles/BooksManager.css';
 
@@ -36,9 +37,10 @@ const BooksManager = () => {
 
   const handleAddBook = async (bookData) => {
     try {
-      await addDoc(collection(db, 'books'), bookData);
+      const docRef = await addDoc(collection(db, 'books'), bookData);
       fetchBooks();
       setShowForm(false);
+      return docRef;
     } catch (error) {
       console.error('Error adding book:', error);
       alert('Error al añadir el libro. Intenta nuevamente.');
@@ -52,6 +54,7 @@ const BooksManager = () => {
       fetchBooks();
       setEditingBook(null);
       setShowForm(false);
+      return bookRef;
     } catch (error) {
       console.error('Error updating book:', error);
       alert('Error al actualizar el libro. Intenta nuevamente.');
@@ -70,9 +73,30 @@ const BooksManager = () => {
     }
   };
 
-  const handleEditBook = (book) => {
-    setEditingBook(book);
-    setShowForm(true);
+  const handleEditBook = async (book) => {
+    try {
+      // Cargar el quiz asociado a este libro
+      const quizDoc = await getDoc(doc(db, 'quizzes', book.id));
+      if (quizDoc.exists()) {
+        book.quiz = quizDoc.data();
+      } else {
+        book.quiz = {
+          questions: [
+            {
+              text: '',
+              answers: ['', '', '', ''],
+              correctAnswer: 0
+            }
+          ]
+        };
+      }
+      
+      setEditingBook(book);
+      setShowForm(true);
+    } catch (error) {
+      console.error('Error loading quiz:', error);
+      alert('Error al cargar el quiz asociado. Intenta nuevamente.');
+    }
   };
 
   const handleCancelEdit = () => {

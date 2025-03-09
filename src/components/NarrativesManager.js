@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getFirestore, collection, getDocs, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import NarrativeForm from './NarrativeForm';
 import '../styles/NarrativesManager.css';
-
-const db = getFirestore();
 
 const NarrativesManager = () => {
   const [narratives, setNarratives] = useState([]);

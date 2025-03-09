@@ -146,3 +146,50 @@
     background-color: #cccccc;
     cursor: not-allowed;
   }
+
+  /* Añadir al final de src/styles/BookForm.css */
+.quiz-question-form {
+  background-color: #f0f8ff;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid #cce5ff;
+}
+
+.quiz-question-form h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #0056b3;
+  border-bottom: 1px solid #cce5ff;
+  padding-bottom: 5px;
+}
+
+.add-question-button {
+  background-color: #007bff;
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background-color 0.3s;
+}
+
+.add-question-button:hover {
+  background-color: #0056b3;
+}
+
+.remove-question-button {
+  background-color: #dc3545;
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: background-color 0.3s;
+}
+
+.remove-question-button:hover {
+  background-color: #c82333;
+}

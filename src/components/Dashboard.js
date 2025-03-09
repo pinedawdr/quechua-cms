@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
+import { db } from '../firebase';
 import '../styles/Dashboard.css';
-
-const db = getFirestore();
 
 const Dashboard = () => {
   const [stats, setStats] = useState({

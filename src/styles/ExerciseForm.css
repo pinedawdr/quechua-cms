@@ -146,3 +146,43 @@
     background-color: #cccccc;
     cursor: not-allowed;
   }
+
+  /* Añadir al final de src/styles/ExerciseForm.css */
+.audio-preview {
+  margin-bottom: 10px;
+  border: 1px dashed #ddd;
+  padding: 10px;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.audio-preview audio {
+  width: 100%;
+}
+
+.audio-note {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+/* Añadir al final de src/styles/ExerciseForm.css */
+.audio-preview {
+  margin-bottom: 10px;
+  border: 1px dashed #ddd;
+  padding: 10px;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.audio-preview audio {
+  width: 100%;
+}
+
+.audio-note {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+  font-style: italic;
+}
