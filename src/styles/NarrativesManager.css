@@ -120,3 +120,38 @@
   .delete-button:hover {
     background-color: #e53935;
   }
+
+  /* Añadir al final del archivo */
+.narrative-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.narrative-category, .narrative-scenes, .narrative-choices, .narrative-duration {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.narrative-category {
+  background-color: rgba(74, 111, 255, 0.1);
+  color: #4A6FFF;
+}
+
+.narrative-scenes {
+  background-color: rgba(246, 173, 85, 0.1);
+  color: #F6AD55;
+}
+
+.narrative-choices {
+  background-color: rgba(72, 187, 120, 0.1);
+  color: #48BB78;
+}
+
+.narrative-duration {
+  background-color: rgba(94, 96, 206, 0.1);
+  color: #5E60CE;
+}

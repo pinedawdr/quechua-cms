@@ -5,6 +5,8 @@ import '../styles/NarrativeForm.css';
 const NarrativeForm = ({ narrative, onSubmit, onCancel }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [categoryType, setCategoryType] = useState('adventure');
+  const [duration, setDuration] = useState('10-15');
   const [coverImage, setCoverImage] = useState('');
   const [scenes, setScenes] = useState([
     {
@@ -25,6 +27,8 @@ const NarrativeForm = ({ narrative, onSubmit, onCancel }) => {
     if (narrative) {
       setTitle(narrative.title || '');
       setDescription(narrative.description || '');
+      setCategoryType(narrative.category || 'adventure');
+      setDuration(narrative.duration || '10-15');
       setCoverImage(narrative.coverImage || '');
       setPreviewImage(narrative.coverImage || '');
       setScenes(narrative.scenes || [
@@ -40,6 +44,10 @@ const NarrativeForm = ({ narrative, onSubmit, onCancel }) => {
       setSceneFiles(narrative.scenes ? narrative.scenes.map(() => null) : [null]);
     }
   }, [narrative]);
+
+  const handleCategoryChange = (value) => {
+    setCategoryType(value);
+  };
 
   const handleCoverImageChange = (e) => {
     const file = e.target.files[0];
@@ -147,6 +155,11 @@ const NarrativeForm = ({ narrative, onSubmit, onCancel }) => {
     setScenes(updatedScenes);
   };
 
+  // Función auxiliar para calcular el número total de opciones
+  const calculateTotalChoices = (scenes) => {
+    return scenes.reduce((total, scene) => total + (scene.choices ? scene.choices.length : 0), 0);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -178,6 +191,9 @@ const NarrativeForm = ({ narrative, onSubmit, onCancel }) => {
         title,
         description,
         coverImage: finalCoverImage,
+        category: categoryType,
+        duration: duration || '10-15',
+        choices: calculateTotalChoices(finalScenes),
         scenes: finalScenes,
         updatedAt: new Date().toISOString()
       };
@@ -213,6 +229,29 @@ const NarrativeForm = ({ narrative, onSubmit, onCancel }) => {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Ingresa una descripción breve de la narrativa"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Categoría</label>
+          <select
+            value={categoryType}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+            required
+          >
+            <option value="adventure">Aventura</option>
+            <option value="culture">Cultura</option>
+            <option value="daily">Cotidiano</option>
+          </select>
+        </div>
+        
+        <div className="form-group">
+          <label>Duración Estimada (minutos)</label>
+          <input
+            type="text"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            placeholder="Ej: 10-15"
           />
         </div>
         

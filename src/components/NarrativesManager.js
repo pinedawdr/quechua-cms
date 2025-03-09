@@ -79,6 +79,16 @@ const NarrativesManager = () => {
     setShowForm(false);
   };
 
+  // Función auxiliar para obtener etiqueta de categoría
+  const getCategoryLabel = (category) => {
+    switch(category) {
+      case 'adventure': return 'Aventura';
+      case 'culture': return 'Cultura';
+      case 'daily': return 'Cotidiano';
+      default: return 'Sin categoría';
+    }
+  };
+
   if (loading && narratives.length === 0) {
     return <div className="loading">Cargando narrativas...</div>;
   }
@@ -125,7 +135,22 @@ const NarrativesManager = () => {
                   <div className="narrative-details">
                     <h3>{narrative.title}</h3>
                     <p>{narrative.description}</p>
-                    <p className="narrative-scenes">{narrative.scenes?.length || 0} escenas</p>
+                    <div className="narrative-metadata">
+                      <span className="narrative-category">
+                        {getCategoryLabel(narrative.category)}
+                      </span>
+                      <span className="narrative-scenes">
+                        {narrative.scenes?.length || 0} escenas
+                      </span>
+                      <span className="narrative-choices">
+                        {narrative.choices || 0} opciones
+                      </span>
+                      {narrative.duration && (
+                        <span className="narrative-duration">
+                          {narrative.duration} min
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="narrative-actions">
                     <button 
