@@ -4,6 +4,7 @@
   <title>Añadir Narrativas a Firestore</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,6 +14,36 @@
     }
     h1 {
       color: #4A6FFF;
+    }
+    .login-container {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .login-container h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .login-container input {
+      padding: 8px;
+      margin-right: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 200px;
+    }
+    #loginButton {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #loginButton:hover {
+      background-color: #0069d9;
     }
     #addButton {
       background-color: #4A6FFF;
@@ -26,6 +57,10 @@
     }
     #addButton:hover {
       background-color: #3A5FEF;
+    }
+    #addButton:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
     }
     #output {
       background-color: #f5f5f5;
@@ -47,8 +82,16 @@
 </head>
 <body>
   <h1>Añadir Narrativas a Firestore</h1>
+  
+  <div class="login-container">
+    <h2>Iniciar sesión</h2>
+    <input type="email" id="email" placeholder="Correo electrónico" />
+    <input type="password" id="password" placeholder="Contraseña" />
+    <button id="loginButton">Iniciar sesión</button>
+  </div>
+  
   <p>Este script añadirá cuatro narrativas interactivas a tu base de datos de Firestore.</p>
-  <button id="addButton">Añadir Narrativas</button>
+  <button id="addButton" disabled>Añadir Narrativas</button>
   <div id="output"></div>
 
   <script>
@@ -64,9 +107,47 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // Manejador de inicio de sesión
+    document.getElementById('loginButton').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (!email || !password) {
+        logMessage("❌ Por favor, ingresa correo y contraseña", "error");
+        return;
+      }
+      
+      try {
+        logMessage("Iniciando sesión...");
+        await auth.signInWithEmailAndPassword(email, password);
+        logMessage("✅ Sesión iniciada correctamente", "success");
+        document.getElementById('addButton').disabled = false;
+      } catch (error) {
+        logMessage("❌ Error al iniciar sesión: " + error.message, "error");
+      }
+    });
+
+    // Escuchar cambios de autenticación
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        logMessage("Usuario autenticado: " + user.email, "success");
+        document.getElementById('addButton').disabled = false;
+      } else {
+        logMessage("No hay usuario autenticado. Inicia sesión para continuar.");
+        document.getElementById('addButton').disabled = true;
+      }
+    });
 
     // Función para añadir narrativas
     async function addNarratives() {
+      // Verificar si el usuario está autenticado
+      if (!auth.currentUser) {
+        logMessage("❌ Debes iniciar sesión para añadir narrativas", "error");
+        return;
+      }
+
       document.getElementById('addButton').disabled = true;
       logMessage("Iniciando el proceso de importación...");
       
@@ -414,7 +495,8 @@
               spanishText: "Subes a un bote. Navegando en el lago, anochece. Sigues un brillo.",
               image: "",
               choices: [
-                { quechuaText: "K'anchayta qatiy", spanishText: "Seguir el brillo", nextScene: 7 },
+                { quechuaText: "K'anchayta qatiy",
+                spanishText: "Seguir el brillo", nextScene: 7 },
                 { quechuaText: "Kutiriy pataman", spanishText: "Volver a la orilla", nextScene: 1 }
               ]
             },

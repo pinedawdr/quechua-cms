@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Añadir Ejercicios de Fluidez Verbal a Firestore</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #4A6FFF;
+    }
+    .login-container {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .login-container h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .login-container input {
+      padding: 8px;
+      margin-right: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 200px;
+    }
+    #loginButton {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #loginButton:hover {
+      background-color: #0069d9;
+    }
+    #addButton {
+      background-color: #4A6FFF;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 20px 0;
+    }
+    #addButton:hover {
+      background-color: #3A5FEF;
+    }
+    #addButton:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    #output {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 4px;
+      min-height: 200px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    .success {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+    .error {
+      color: #F44336;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Añadir Ejercicios de Fluidez Verbal a Firestore</h1>
+  
+  <div class="login-container">
+    <h2>Iniciar sesión</h2>
+    <input type="email" id="email" placeholder="Correo electrónico" />
+    <input type="password" id="password" placeholder="Contraseña" />
+    <button id="loginButton">Iniciar sesión</button>
+  </div>
+  
+  <p>Este script añadirá ejercicios de fluidez verbal a tu base de datos de Firestore.</p>
+  <button id="addButton" disabled>Añadir Ejercicios</button>
+  <div id="output"></div>
+
+  <script>
+    // Inicializar Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyA5N2icFbrrGgRkQD80Dj8jwg7I7u8ner0",
+      authDomain: "quechuaapp-87797.firebaseapp.com",
+      projectId: "quechuaapp-87797",
+      storageBucket: "quechuaapp-87797.appspot.com",
+      messagingSenderId: "1024003542254",
+      appId: "1:1024003542254:web:a845bcfe4241fd6285f7ff"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // Manejador de inicio de sesión
+    document.getElementById('loginButton').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (!email || !password) {
+        logMessage("❌ Por favor, ingresa correo y contraseña", "error");
+        return;
+      }
+      
+      try {
+        logMessage("Iniciando sesión...");
+        await auth.signInWithEmailAndPassword(email, password);
+        logMessage("✅ Sesión iniciada correctamente", "success");
+        document.getElementById('addButton').disabled = false;
+      } catch (error) {
+        logMessage("❌ Error al iniciar sesión: " + error.message, "error");
+      }
+    });
+
+    // Escuchar cambios de autenticación
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        logMessage("Usuario autenticado: " + user.email, "success");
+        document.getElementById('addButton').disabled = false;
+      } else {
+        logMessage("No hay usuario autenticado. Inicia sesión para continuar.");
+        document.getElementById('addButton').disabled = true;
+      }
+    });
+
+    // Función para añadir ejercicios
+    async function addExercises() {
+      // Verificar si el usuario está autenticado
+      if (!auth.currentUser) {
+        logMessage("❌ Debes iniciar sesión para añadir ejercicios", "error");
+        return;
+      }
+
+      document.getElementById('addButton').disabled = true;
+      logMessage("Iniciando el proceso de importación...");
+      
+      try {
+        // Ejercicio 1: Pronunciación Básica
+        const ejercicio1 = {
+          title: "Pronunciación Básica",
+          description: "Aprende a pronunciar palabras comunes y saludos en quechua",
+          type: "pronunciation",
+          difficulty: "easy",
+          imageUrl: "",
+          words: [
+            {
+              quechuaText: "Allianchu",
+              spanishText: "Hola / Buenos días",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Tupananchiskama",
+              spanishText: "Hasta luego / Hasta pronto",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Sulpayki",
+              spanishText: "Gracias",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Imaynalla kashanki",
+              spanishText: "¿Cómo estás?",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Allinmi kashani",
+              spanishText: "Estoy bien",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Imatan sutiyki",
+              spanishText: "¿Cómo te llamas?",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Sutiymin...",
+              spanishText: "Me llamo...",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Kusisqa kani riqsiyki",
+              spanishText: "Encantado de conocerte",
+              audioUrl: ""
+            }
+          ],
+          updatedAt: new Date().toISOString()
+        };
+
+        // Ejercicio 2: Animales
+        const ejercicio2 = {
+          title: "Animales en Quechua",
+          description: "Aprende los nombres de animales comunes en quechua",
+          type: "vocabulary",
+          difficulty: "easy",
+          imageUrl: "",
+          words: [
+            {
+              quechuaText: "Allqo",
+              spanishText: "Perro",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Michi",
+              spanishText: "Gato",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Quwi",
+              spanishText: "Cuy",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Waswa",
+              spanishText: "Pato",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Challwa",
+              spanishText: "Pez",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Urpi",
+              spanishText: "Paloma",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Llama",
+              spanishText: "Llama",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Kuntur",
+              spanishText: "Cóndor",
+              audioUrl: ""
+            }
+          ],
+          updatedAt: new Date().toISOString()
+        };
+
+        // Ejercicio 3: Números
+        const ejercicio3 = {
+          title: "Números en Quechua",
+          description: "Aprende a contar en quechua del 1 al 10",
+          type: "vocabulary",
+          difficulty: "easy",
+          imageUrl: "",
+          words: [
+            {
+              quechuaText: "Huk",
+              spanishText: "Uno",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Iskay",
+              spanishText: "Dos",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Kimsa",
+              spanishText: "Tres",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Tawa",
+              spanishText: "Cuatro",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Pichqa",
+              spanishText: "Cinco",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Suqta",
+              spanishText: "Seis",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Qanchis",
+              spanishText: "Siete",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Pusaq",
+              spanishText: "Ocho",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Isqun",
+              spanishText: "Nueve",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Chunka",
+              spanishText: "Diez",
+              audioUrl: ""
+            }
+          ],
+          updatedAt: new Date().toISOString()
+        };
+
+        // Ejercicio 4: Frases de Conversación
+        const ejercicio4 = {
+          title: "Frases para Conversar",
+          description: "Aprende frases útiles para mantener una conversación básica en quechua",
+          type: "conversation",
+          difficulty: "medium",
+          imageUrl: "",
+          words: [
+            {
+              quechuaText: "Maymantan kanki",
+              spanishText: "¿De dónde eres?",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Noqan kani...",
+              spanishText: "Yo soy de...",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Qamqa imatatan ruwanki",
+              spanishText: "¿Y tú, qué haces? (a qué te dedicas)",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Noqan yachachiq kani",
+              spanishText: "Yo soy profesor/a",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Mashkha watayuqmi kanki",
+              spanishText: "¿Cuántos años tienes?",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Ñuqapa kanmi chunka pusaqniyuq wata",
+              spanishText: "Tengo dieciocho años",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Quechuata rimayta munani",
+              spanishText: "Quiero hablar quechua",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Manan entiendinikuchu",
+              spanishText: "No entiendo",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Kutimunki",
+              spanishText: "Repite por favor",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Manan uyariykichu",
+              spanishText: "No te escucho",
+              audioUrl: ""
+            }
+          ],
+          updatedAt: new Date().toISOString()
+        };
+
+        // Ejercicio 5: Familia
+        const ejercicio5 = {
+          title: "Familia en Quechua",
+          description: "Aprende los términos para miembros de la familia en quechua",
+          type: "vocabulary",
+          difficulty: "medium",
+          imageUrl: "",
+          words: [
+            {
+              quechuaText: "Tayta",
+              spanishText: "Padre",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Mama",
+              spanishText: "Madre",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Wawa",
+              spanishText: "Bebé / Niño pequeño",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Tura",
+              spanishText: "Hermano (de un hombre)",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Pana",
+              spanishText: "Hermana (de un hombre)",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Ñaña",
+              spanishText: "Hermana (de una mujer)",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Wawqi",
+              spanishText: "Hermano (de una mujer)",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Machula / Hatun tayta",
+              spanishText: "Abuelo",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Paya / Hatun mama",
+              spanishText: "Abuela",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Ayllu",
+              spanishText: "Familia / Comunidad",
+              audioUrl: ""
+            }
+          ],
+          updatedAt: new Date().toISOString()
+        };
+
+        // Ejercicio 6: Pronombres y Verbos Comunes
+        const ejercicio6 = {
+          title: "Pronombres y Verbos Básicos",
+          description: "Aprende pronombres personales y verbos comunes en quechua",
+          type: "pronunciation",
+          difficulty: "medium",
+          imageUrl: "",
+          words: [
+            {
+              quechuaText: "Ñuqa",
+              spanishText: "Yo",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Qam",
+              spanishText: "Tú",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Pay",
+              spanishText: "Él/Ella",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Ñuqanchik",
+              spanishText: "Nosotros (inclusivo)",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Ñuqayku",
+              spanishText: "Nosotros (exclusivo)",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Qamkuna",
+              spanishText: "Ustedes",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Paykuna",
+              spanishText: "Ellos/Ellas",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Mikhuy",
+              spanishText: "Comer",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Rimay",
+              spanishText: "Hablar",
+              audioUrl: ""
+            },
+            {
+              quechuaText: "Puriy",
+              spanishText: "Caminar",
+              audioUrl: ""
+            }
+          ],
+          updatedAt: new Date().toISOString()
+        };
+
+        // Agregar ejercicios a Firestore
+        const exercisesCollection = db.collection('verbalExercises');
+        
+        logMessage("Añadiendo el ejercicio 1: Pronunciación Básica...");
+        const docRef1 = await exercisesCollection.add(ejercicio1);
+        logMessage("✅ Ejercicio 1 añadido con ID: " + docRef1.id, "success");
+        
+        logMessage("Añadiendo el ejercicio 2: Animales en Quechua...");
+        const docRef2 = await exercisesCollection.add(ejercicio2);
+        logMessage("✅ Ejercicio 2 añadido con ID: " + docRef2.id, "success");
+        
+        logMessage("Añadiendo el ejercicio 3: Números en Quechua...");
+        const docRef3 = await exercisesCollection.add(ejercicio3);
+        logMessage("✅ Ejercicio 3 añadido con ID: " + docRef3.id, "success");
+        
+        logMessage("Añadiendo el ejercicio 4: Frases para Conversar...");
+        const docRef4 = await exercisesCollection.add(ejercicio4);
+        logMessage("✅ Ejercicio 4 añadido con ID: " + docRef4.id, "success");
+        
+        logMessage("Añadiendo el ejercicio 5: Familia en Quechua...");
+        const docRef5 = await exercisesCollection.add(ejercicio5);
+        logMessage("✅ Ejercicio 5 añadido con ID: " + docRef5.id, "success");
+        
+        logMessage("Añadiendo el ejercicio 6: Pronombres y Verbos Básicos...");
+        const docRef6 = await exercisesCollection.add(ejercicio6);
+        logMessage("✅ Ejercicio 6 añadido con ID: " + docRef6.id, "success");
+        
+        logMessage("✅ Todos los ejercicios han sido añadidos correctamente", "success");
+        
+      } catch (error) {
+        logMessage("❌ Error al añadir ejercicios: " + error.message, "error");
+      } finally {
+        document.getElementById('addButton').disabled = false;
+      }
+    }
+
+    function logMessage(msg, type = "") {
+      const output = document.getElementById('output');
+      const timestamp = new Date().toLocaleTimeString();
+      output.innerHTML += `<p class="${type}">[${timestamp}] ${msg}</p>`;
+      output.scrollTop = output.scrollHeight;
+      console.log(msg);
+    }
+
+    document.getElementById('addButton').addEventListener('click', addExercises);
+  </script>
+</body>
+</html>

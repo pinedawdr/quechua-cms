@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Añadir Libros a Firestore</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #4A6FFF;
+    }
+    .login-container {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .login-container h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .login-container input {
+      padding: 8px;
+      margin-right: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 200px;
+    }
+    #loginButton {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #loginButton:hover {
+      background-color: #0069d9;
+    }
+    #addButton {
+      background-color: #4A6FFF;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 20px 0;
+    }
+    #addButton:hover {
+      background-color: #3A5FEF;
+    }
+    #addButton:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    #output {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 4px;
+      min-height: 200px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    .success {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+    .error {
+      color: #F44336;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Añadir Libros a Firestore</h1>
+  
+  <div class="login-container">
+    <h2>Iniciar sesión</h2>
+    <input type="email" id="email" placeholder="Correo electrónico" />
+    <input type="password" id="password" placeholder="Contraseña" />
+    <button id="loginButton">Iniciar sesión</button>
+  </div>
+  
+  <p>Este script añadirá dos libros con sus respectivos quizzes a tu base de datos de Firestore.</p>
+  <button id="addButton" disabled>Añadir Libros</button>
+  <div id="output"></div>
+
+  <script>
+    // Inicializar Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyA5N2icFbrrGgRkQD80Dj8jwg7I7u8ner0",
+      authDomain: "quechuaapp-87797.firebaseapp.com",
+      projectId: "quechuaapp-87797",
+      storageBucket: "quechuaapp-87797.appspot.com",
+      messagingSenderId: "1024003542254",
+      appId: "1:1024003542254:web:a845bcfe4241fd6285f7ff"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // Manejador de inicio de sesión
+    document.getElementById('loginButton').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (!email || !password) {
+        logMessage("❌ Por favor, ingresa correo y contraseña", "error");
+        return;
+      }
+      
+      try {
+        logMessage("Iniciando sesión...");
+        await auth.signInWithEmailAndPassword(email, password);
+        logMessage("✅ Sesión iniciada correctamente", "success");
+        document.getElementById('addButton').disabled = false;
+      } catch (error) {
+        logMessage("❌ Error al iniciar sesión: " + error.message, "error");
+      }
+    });
+
+    // Escuchar cambios de autenticación
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        logMessage("Usuario autenticado: " + user.email, "success");
+        document.getElementById('addButton').disabled = false;
+      } else {
+        logMessage("No hay usuario autenticado. Inicia sesión para continuar.");
+        document.getElementById('addButton').disabled = true;
+      }
+    });
+
+    // Función para añadir libros
+    async function addBooks() {
+      // Verificar si el usuario está autenticado
+      if (!auth.currentUser) {
+        logMessage("❌ Debes iniciar sesión para añadir libros", "error");
+        return;
+      }
+
+      document.getElementById('addButton').disabled = true;
+      logMessage("Iniciando el proceso de importación...");
+      
+      try {
+        // Libro 1: El Qorilazo Chumbivilcano
+        const libro1 = {
+          title: "El Qorilazo Chumbivilcano",
+          description: "La historia del valiente jinete de los Andes que protegía a los más débiles y luchaba contra las injusticias.",
+          coverImage: "",
+          level: "medium",
+          pages: [
+            {
+              quechuaText: "Ñawpa timpupi, ancha reqsisqa runa tiyaran, sutin karan Qorilazo Chumbivilcano. Kay runaqa sumaq caballopi puriranmi, qorimanta qaqchan karan, llipin ayllukunata yanaparan imayna atisqanpi.",
+              spanishText: "Hace mucho tiempo, vivía un hombre muy conocido, llamado Qorilazo Chumbivilcano. Este hombre montaba un hermoso caballo, tenía una brillante montura de oro, y ayudaba a todas las comunidades como podía.",
+              image: "",
+              notes: "Qorilazo significa 'lazo de oro' y Chumbivilcano se refiere a una persona originaria de Chumbivilcas, una provincia de Cusco."
+            },
+            {
+              quechuaText: "Huk p'unchaypi, huk wakcha runa waqaspa Qorilazoman chayarqan: 'Yanapaykuway tayta, hacienda runa uwijakunata suwaykapuwan', nispa.",
+              spanishText: "Un día, un hombre pobre llegó llorando donde Qorilazo: 'Ayúdame señor, los hombres de la hacienda me han robado mis ovejas', le dijo.",
+              image: "",
+              notes: ""
+            },
+            {
+              quechuaText: "Qorilazo nisqa: 'Ama llakikuychu, allinta yanapasqayki'. Chaymantam caballonman wicharpan. Sombreronta churakun, lliw caballopi sumaqta waskhakunata qarallamanta rurasqata apaspa.",
+              spanishText: "Qorilazo le dijo: 'No te preocupes, te ayudaré bien'. Entonces montó su caballo. Se puso su sombrero, llevando en su caballo hermosos lazos hechos de cuero.",
+              image: "",
+              notes: ""
+            },
+            {
+              quechuaText: "Haciendaman chayaruptinmi, Qorilazo khaparisqa: 'Wak runaqa maqtaq uywankunata kutichiy. Mana chayqa, juchakunata paganayki kanqa!'",
+              spanishText: "Al llegar a la hacienda, Qorilazo gritó: '¡Devuelve los animales de ese joven! ¡O pagarás por tus faltas!'",
+              image: "",
+              notes: ""
+            },
+            {
+              quechuaText: "Hacienda runakunaqa Qorilazota rimayta munasqaku: 'Qam pikunawan rimanki? Kaypiqa ñuqayku kamachikuyku'.",
+              spanishText: "Los hombres de la hacienda quisieron hablar con Qorilazo: '¿Con quién crees que hablas? Aquí mandamos nosotros'.",
+              image: "",
+              notes: ""
+            },
+            {
+              quechuaText: "Qorilazoqa mana manchasqa. Payqa qoriwaskhanta lluqsirachispa, haciendapi llank'aqkunata wataran. Chaymantaqa, wakcha runaq uywankunata kutichispa, caballonta siqaykuspa ripuran.",
+              spanishText: "Qorilazo no sintió miedo. Sacó su lazo de oro y amarró a los trabajadores de la hacienda. Luego, devolviendo los animales del hombre pobre, montó su caballo y se fue.",
+              image: "",
+              notes: ""
+            },
+            {
+              quechuaText: "Qorilazoqa mana qolqepaqchu llank'aran. Payqa wakcha runakunatan yanaparan. Ñawpa runakunaqa ninkuqa: 'Qorilazoqa ichaqa kunankama kawsashanmi. Hayk'aqllapas wakcha runakuna paykunamanta yanapay mañakuqtinku, Qorilazoqa hamunqa' nispa.",
+              spanishText: "Qorilazo no trabajaba por dinero. Él ayudaba a la gente pobre. Los ancianos dicen: 'El Qorilazo sigue vivo hasta ahora. Cuando la gente pobre pide ayuda, Qorilazo vendrá' dicen.",
+              image: "",
+              notes: ""
+            }
+          ],
+          updatedAt: new Date().toISOString()
+        };
+
+        // Quiz para el libro 1
+        const quiz1 = {
+          title: "Quiz - El Qorilazo Chumbivilcano",
+          questions: [
+            {
+              text: "¿Qué significa 'Qorilazo'?",
+              answers: [
+                "Lazo de oro",
+                "Caballo dorado",
+                "Montaña de oro",
+                "Hombre rico"
+              ],
+              correctAnswer: 0
+            },
+            {
+              text: "¿Qué problema tenía el hombre pobre que buscó ayuda?",
+              answers: [
+                "Le robaron su casa",
+                "Le robaron sus ovejas",
+                "Estaba enfermo",
+                "No tenía trabajo"
+              ],
+              correctAnswer: 1
+            },
+            {
+              text: "¿Cómo ayudó Qorilazo al hombre pobre?",
+              answers: [
+                "Le dio dinero",
+                "Construyó una casa nueva",
+                "Recuperó sus ovejas",
+                "Le dio comida"
+              ],
+              correctAnswer: 2
+            },
+            {
+              text: "¿Por qué trabajaba Qorilazo según la historia?",
+              answers: [
+                "Por dinero y fama",
+                "Para ser el más poderoso",
+                "Para ayudar a la gente pobre",
+                "Para ser alcalde del pueblo"
+              ],
+              correctAnswer: 2
+            },
+            {
+              text: "Según los ancianos ¿qué pasará cuando la gente pobre pida ayuda?",
+              answers: [
+                "Nadie los ayudará",
+                "Qorilazo vendrá",
+                "Deberán ayudarse entre ellos",
+                "Los hacendados los ayudarán"
+              ],
+              correctAnswer: 1
+            }
+          ]
+        };
+        
+        // Libro 2: La Guerrilla de Paucartambo
+        const libro2 = {
+          title: "La Valiente de Paucartambo",
+          description: "Historia de una niña valiente durante los tiempos difíciles en Paucartambo, adaptada para niños.",
+          coverImage: "",
+          level: "easy",
+          pages: [
+            {
+              quechuaText: "Paucartambo llaqtapi, huk sumaq sipascha tiyaran, sutinmi karan Wayra. Payqa ancha kallpasapa karan. Llaqtanpi runakunata yanapay munaran.",
+              spanishText: "En el pueblo de Paucartambo, vivía una hermosa niña, se llamaba Wayra. Ella era muy fuerte. Quería ayudar a las personas de su pueblo.",
+              image: "",
+              notes: "Wayra significa 'viento' en quechua, simbolizando libertad y fuerza."
+            },
+            {
+              quechuaText: "Chay p'unchawkunapi, Paucartambo llaqta sasachakuypi kawsaran. Mana allinta mikhunankupaq kapuranchu, achka runakuna wakcha karan, wakin runakunaqa llaqtamanta ripuyta qallarisqaku.",
+              spanishText: "En esos días, el pueblo de Paucartambo vivía en problemas. No tenían suficiente para comer, muchas personas eran pobres, y algunas personas habían comenzado a irse del pueblo.",
+              image: "",
+              notes: ""
+            },
+            {
+              quechuaText: "Wayraqa tapukuran: '¿Imaynatataq llaqtayta yanapaymanri?' nispa. Chaymantam taytanpa p'achakunata qhawarispa, huk p'achata ruwayta qallariran.",
+              spanishText: "Wayra se preguntaba: '¿Cómo podría ayudar a mi pueblo?' Entonces, mirando las ropas de su padre, comenzó a hacer un traje.",
+              image: "",
+              notes: ""
+            },
+            {
+              quechuaText: "Tutapi, Wayraqa chay p'achawan llaqtamanta lluqsiran. Payqa qhapaqkunamanta, haciendamanta, allin runakunamanta mikhunata, p'achakunata, hampita ima mañakuq, wakcha runakunaman qonanpaq.",
+              spanishText: "Por la noche, Wayra salía del pueblo con ese traje. Pedía comida, ropa, medicinas a los ricos, a las haciendas, a las buenas personas, para dárselos a los pobres.",
+              image: "",
+              notes: ""
+            },
+            {
+              quechuaText: "Wakin kutipis mana pay kaqtin, p'achan qhawarikaptin, runakuna ninku: 'Chay qhari Wayra hina kallpayoqmi kashan! ¡Paytaqmi yanapawanchis!' nispa.",
+              spanishText: "Algunas veces cuando no la veían directamente, al ver su traje, la gente decía: '¡Ese hombre tiene la fuerza de Wayra! ¡Él nos está ayudando!' decían.",
+              image: "",
+              notes: ""
+            },
+            {
+              quechuaText: "Llaqtapi kamachikuqkunaqa Wayrata hap'iyta munarankum. Ichaqa payqa ancha phawaq, ancha yachaysapa karan. Mana pipas hap'iyta atirankuchu.",
+              spanishText: "Las autoridades del pueblo querían atrapar a Wayra. Pero ella era muy veloz y muy inteligente. Nadie podía atraparla.",
+              image: "",
+              notes: ""
+            },
+            {
+              quechuaText: "Achka p'unchawkuna pasaqtinmi, Paucartambo llaqtapi kawsay allinyaran. Llaqtapi runakuna yanapakuyta yachasqaku, hukllawasqa kawsayta qallarisqaku.",
+              spanishText: "Después de muchos días, la vida en el pueblo de Paucartambo mejoró. La gente del pueblo había aprendido a ayudarse, a vivir unidos.",
+              image: "",
+              notes: ""
+            },
+            {
+              quechuaText: "Wayra ancha kusisqa karan llaqtanta yanapasqanmanta. Yachanña llaqta kallpaqa llaqtapi runakunapi kasqanta, paykunallapi. Kunankamapas takikunapi Wayramanta yuyarinkuraq, Paucartambopi.",
+              spanishText: "Wayra estaba muy feliz de haber ayudado a su pueblo. Ya sabía que la fuerza del pueblo estaba en su gente, en ellos mismos. Hasta ahora, en canciones recuerdan a Wayra, en Paucartambo.",
+              image: "",
+              notes: ""
+            }
+          ],
+          updatedAt: new Date().toISOString()
+        };
+
+        // Quiz para el libro 2
+        const quiz2 = {
+          title: "Quiz - La Valiente de Paucartambo",
+          questions: [
+            {
+              text: "¿Cuál es el nombre de la niña en la historia?",
+              answers: [
+                "María",
+                "Killa",
+                "Wayra",
+                "Ñusta"
+              ],
+              correctAnswer: 2
+            },
+            {
+              text: "¿Qué significa el nombre Wayra?",
+              answers: [
+                "Agua",
+                "Viento",
+                "Tierra",
+                "Fuego"
+              ],
+              correctAnswer: 1
+            },
+            {
+              text: "¿Qué problemas tenía el pueblo de Paucartambo?",
+              answers: [
+                "No tenían suficiente comida",
+                "Había mucha lluvia",
+                "El río se había secado",
+                "No había escuelas"
+              ],
+              correctAnswer: 0
+            },
+            {
+              text: "¿Cómo ayudaba Wayra a su pueblo?",
+              answers: [
+                "Cantando canciones",
+                "Contando historias",
+                "Pidiendo ayuda a otros pueblos",
+                "Consiguiendo comida, ropa y medicinas para los pobres"
+              ],
+              correctAnswer: 3
+            },
+            {
+              text: "¿Qué aprendió la gente del pueblo al final de la historia?",
+              answers: [
+                "A cultivar mejor la tierra",
+                "A ayudarse unos a otros y vivir unidos",
+                "A construir mejores casas",
+                "A hablar mejor el quechua"
+              ],
+              correctAnswer: 1
+            }
+          ]
+        };
+
+        // Agregar libros y quizzes a Firestore
+        logMessage("Añadiendo el libro 1: El Qorilazo Chumbivilcano...");
+        const libroRef1 = await db.collection('books').add(libro1);
+        logMessage("✅ Libro 1 añadido con ID: " + libroRef1.id, "success");
+        
+        logMessage("Añadiendo el quiz 1...");
+        await db.collection('quizzes').doc(libroRef1.id).set(quiz1);
+        logMessage("✅ Quiz 1 añadido con ID: " + libroRef1.id, "success");
+        
+        logMessage("Añadiendo el libro 2: La Valiente de Paucartambo...");
+        const libroRef2 = await db.collection('books').add(libro2);
+        logMessage("✅ Libro 2 añadido con ID: " + libroRef2.id, "success");
+        
+        logMessage("Añadiendo el quiz 2...");
+        await db.collection('quizzes').doc(libroRef2.id).set(quiz2);
+        logMessage("✅ Quiz 2 añadido con ID: " + libroRef2.id, "success");
+        
+        logMessage("✅ Todos los libros y quizzes se han añadido correctamente", "success");
+        
+      } catch (error) {
+        logMessage("❌ Error al añadir libros: " + error.message, "error");
+      } finally {
+        document.getElementById('addButton').disabled = false;
+      }
+    }
+
+    function logMessage(msg, type = "") {
+      const output = document.getElementById('output');
+      const timestamp = new Date().toLocaleTimeString();
+      output.innerHTML += `<p class="${type}">[${timestamp}] ${msg}</p>`;
+      output.scrollTop = output.scrollHeight;
+      console.log(msg);
+    }
+
+    document.getElementById('addButton').addEventListener('click', addBooks);
+  </script>
+</body>
+</html>

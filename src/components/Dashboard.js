@@ -1,3 +1,4 @@
+// src/components/Dashboard.js (modificado)
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
@@ -78,6 +79,7 @@ const Dashboard = () => {
         <div className="stat-card">
           <h2>{stats.users}</h2>
           <p>Usuarios</p>
+          <Link to="/users" className="stat-link">Gestionar</Link>
         </div>
       </div>
       
@@ -92,6 +94,9 @@ const Dashboard = () => {
           </Link>
           <Link to="/narratives" className="action-button">
             Crear Narrativa Interactiva
+          </Link>
+          <Link to="/users" className="action-button">
+            Gestionar Usuarios
           </Link>
         </div>
       </div>

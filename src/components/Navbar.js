@@ -1,3 +1,4 @@
+// src/components/Navbar.js (modificado)
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import '../styles/Navbar.css';
@@ -41,6 +42,14 @@ const Navbar = ({ onLogout }) => {
             className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
           >
             Narrativas
+          </NavLink>
+        </li>
+        <li className="nav-item">
+          <NavLink 
+            to="/users" 
+            className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
+          >
+            Usuarios
           </NavLink>
         </li>
       </ul>

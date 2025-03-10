@@ -1,3 +1,4 @@
+// src/App.js (modificado)
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
@@ -7,6 +8,7 @@ import Dashboard from './components/Dashboard';
 import BooksManager from './components/BooksManager';
 import ExercisesManager from './components/ExercisesManager';
 import NarrativesManager from './components/NarrativesManager';
+import UsersManager from './components/UsersManager'; // Importar el nuevo componente
 import Navbar from './components/Navbar';
 import './styles/App.css';
 
@@ -60,6 +62,7 @@ function App() {
               <Route path="/books" element={<BooksManager />} />
               <Route path="/exercises" element={<ExercisesManager />} />
               <Route path="/narratives" element={<NarrativesManager />} />
+              <Route path="/users" element={<UsersManager />} /> {/* Nueva ruta */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
